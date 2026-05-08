@@ -1,14 +1,14 @@
 use std::{env, error::Error, fs};
 
-const CONTEXTS: &str = "\
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const CONTEXTS: &str = "\
 Rust:
 Safe, Fast, Productive.
 Pick three.
 ";
-
-#[cfg(test)]
-mod tests {
-    use super::*;
 
     #[test]
     fn case_sensitive() {
