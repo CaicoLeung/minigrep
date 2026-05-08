@@ -1,0 +1,4 @@
+/target
+# Claude Code configuration
+.claude/
+.omc/
