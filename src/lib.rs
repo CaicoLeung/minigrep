@@ -1,5 +1,6 @@
 use colored::Colorize;
-use std::{env, error::Error, fs};
+use core::str;
+use std::{env, error::Error, fs, usize};
 
 #[cfg(test)]
 mod tests {
@@ -24,20 +25,37 @@ Pick three.
     }
 }
 
-pub fn search_case_insensitive<'a>(query: &'a str, contents: &'a str) -> Vec<&'a str> {
+fn format_line((line, content): (usize, &str), query: &str, ignore_case: bool) -> String {
+    let colored = if ignore_case {
+        // Case-insensitive: find and replace the actual matched substring
+        if let Some(pos) = content.to_lowercase().find(&query.to_lowercase()) {
+            let actual = &content[pos..pos + query.len()];
+            content.replacen(actual, &actual.red().to_string(), 1)
+        } else {
+            content.to_string()
+        }
+    } else {
+        content.replacen(query, &query.red().to_string(), 1)
+    };
+    format!("{}: {}", line.to_string().green(), colored)
+}
+
+pub fn search_case_insensitive<'a>(query: &'a str, contents: &'a str) -> Vec<String> {
     contents
         .lines()
-        .map(|line| line.trim())
-        .filter(|line| line.to_lowercase().contains(&query.to_lowercase()))
+        .enumerate()
+        .filter(|(_, content)| content.to_lowercase().contains(&query.to_lowercase()))
+        .map(|(i, content)| format_line((i + 1, content), query, true))
         .collect()
 }
 
-pub fn search<'a>(query: &'a str, contents: &'a str) -> Vec<&'a str> {
+pub fn search<'a>(query: &'a str, contents: &'a str) -> Vec<String> {
     contents
         .lines()
-        .map(|line| line.trim())
-        .filter(|line| line.contains(query))
-        .collect()
+        .enumerate()
+        .filter(|(_, content)| content.contains(query))
+        .map(|(i, content)| format_line((i + 1, content), query, false))
+        .collect::<Vec<_>>()
 }
 
 pub struct Config<'a> {
@@ -77,18 +95,7 @@ pub fn run(
         true => search_case_insensitive(&query, &content),
         false => search(&query, &content),
     };
-    let result_colorized = result
-        .iter()
-        .enumerate()
-        .map(|(i, r)| {
-            format!(
-                "{line}: {content}",
-                line = i.to_string().green(),
-                content = r
-            )
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let result_colorized = result.join("\n");
     println!("{}", result_colorized);
     Ok(result.join("\n"))
 }
