@@ -1,3 +1,4 @@
+use colored::Colorize;
 use std::{env, error::Error, fs};
 
 #[cfg(test)]
@@ -76,6 +77,18 @@ pub fn run(
         true => search_case_insensitive(&query, &content),
         false => search(&query, &content),
     };
-    println!("{:#?}", &result);
+    let result_colorized = result
+        .iter()
+        .enumerate()
+        .map(|(i, r)| {
+            format!(
+                "{line}: {content}",
+                line = i.to_string().green(),
+                content = r
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    println!("{}", result_colorized);
     Ok(result.join("\n"))
 }
