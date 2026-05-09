@@ -1,6 +1,7 @@
+use clap::Parser;
 use colored::Colorize;
 use core::str;
-use std::{env, error::Error, fs, usize};
+use std::{error::Error, fs, path::PathBuf};
 
 #[cfg(test)]
 mod tests {
@@ -58,29 +59,13 @@ pub fn search<'a>(query: &'a str, contents: &'a str) -> Vec<String> {
         .collect::<Vec<_>>()
 }
 
-pub struct Config<'a> {
-    query: &'a str,
-    file_path: &'a str,
-    ignore_case: bool,
-}
-
-impl<'a> Config<'a> {
-    pub fn build(args: &'a [String]) -> Result<Config<'a>, &'a str> {
-        if args.len() < 3 {
-            return Err("not enough arguments");
-        }
-        let query = &args.get(1).expect("Missing query argument");
-        let file_path = &args.get(2).expect("Missing file_path argument");
-        let ignore_case = matches!(
-            &env::var("IGNORE_CASE").map(|v| v.to_lowercase()).as_deref(),
-            Ok("yes" | "true" | "y")
-        );
-        Ok(Config {
-            query,
-            file_path,
-            ignore_case,
-        })
-    }
+#[derive(Parser, Debug)]
+#[command(version, long_about = None)]
+pub struct Config {
+    pub query: String,
+    pub file_path: PathBuf,
+    #[arg(short = 'i', long = "ignore-case")]
+    pub ignore_case: bool,
 }
 
 pub fn run(
